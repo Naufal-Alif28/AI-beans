@@ -1,0 +1,511 @@
+23/01/2026
+RandomForest.py
+# INPUT
+data = "final_project/data_preparation/dataset_unscaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_RF_unscaled_newparam4_k10.csv"
+# random forest parameters
+n_estimators = 300 # number of trees in the forest
+max_depth =  30 # maximum tree depth, until leaf pure if None
+max_features = "sqrt" # maximum number of feature samled in each bootstrap (sqrt mean sqrt(n_feature))
+max_leaf = None # max number of leaf
+max_samples = 0.9 # maximum sampling ratio per bootstrap
+min_samples_leaf = 10
+min_samples_split = 20
+class_weight = "balanced" # class weighting option in case of class size imbalance ("balanced" for automatic balancing)
+# cross-validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 10 # number of splits for StratifiedKFold n_splits
+scoring_metrics  = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+21/01/2026
+RandomForest.py -> default but changed n_estimator=100->200, class_weight=None->"balanced"
+
+21/01/2026
+SVM.py SVM_refparam2_k10 -> max_iter 3000 (no warnings); 3rd degree polynomial kernel 
+
+21/01/2026
+NeuralNetwork.py semiparam3_k10 -> similar to semiparam 1 but with CrossEntropyLoss criterion; sigmoid activation func.;small learning rate=0.001;original structure;
+
+21/01/2026
+RandomForest.py -> default parameters are good enough, tried increased n_estimator to 500 but just microscopic improvement
+data = "final_project/data_preparation/dataset_unscaled.csv" 
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_RF_unscaled_defaultparam.csv"
+# random forest parameters
+n_estimators = 100 # number of trees in the forest
+max_depth =  None # maximum tree depth, until leaf pure if None
+max_features = "sqrt" # maximum number of feature samled in each bootstrap (sqrt mean sqrt(n_feature))
+max_leaf = None # max number of leaf
+max_samples = None # maximum sampling ratio per bootstrap
+class_weight = None # class weighting option in case of class size imbalance ("balanced" for automatic balancing)
+# cross-validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics  = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+21/01/2026
+NeuralNetwork.py -> newparam11 = newparam9 but with class weight balancing (no better)
+
+21/01/2026
+SVM.py -> best SVM run, use rbf instead of polynomial kernel
+# INPUT
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_SVM_scaled_newparam2.csv"
+# SVM parameters
+kernel = "rbf" # kernel type for SVM ("poly","linear","rbf","sigmoid","precomputed")
+degree = 3 # polynomoial degree
+gamma = "scale" # gamma coefficient for rbf or polynomial
+class_weight = "balanced" # class weighting option in case of class size imbalance ("balanced" for automatic balancing)
+max_iter = 1500 # maximum number of iterations
+func_shape = "ovo" # decision function shape ("ovo":one-vs-one;"ovr":"one-vs-rest")
+# cross-validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics  = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+21/01/2026 09.24
+SVM.py -> refparam, 1500 iter (previously 1000 iter raised warnings)
+# INPUT
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_SVM_scaled_refparam2.csv"
+# SVM parameters
+kernel = "poly" # kernel type for SVM ("poly","linear","rbf","sigmoid","precomputed")
+degree = 3 # polynomoial degree
+gamma = "scale" # gamma coefficient for rbf or polynomial
+class_weight = None # class weighting option in case of class size imbalance ("balanced" for automatic balancing)
+max_iter = 1500 # maximum number of iterations
+func_shape = "ovo" # decision function shape ("ovo":one-vs-one;"ovr":"one-vs-rest")
+# cross-validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics  = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+21/01/2026 08.45
+NeuralNetwork.py -> newparam9 with two features dropped; slightly better precision but slightly worse recall
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_selectfeatures1.csv"
+# neural network parameters
+input_size = 14
+h1_size = 32
+h2_size =16
+n_class = 7
+n_epoch = 75
+batch_size = 64
+learning_rate = 0.001
+dropout_1 = 0.1
+dropout_2 = 0.1
+features = ["Area","Perimeter","MajorAxisLength","MinorAxisLength","AspectRation","Eccentricity","ConvexArea","EquivDiameter","roundness","Compactness","ShapeFactor1","ShapeFactor2","ShapeFactor3","ShapeFactor4"]
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,dropout_1,dropout_2,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.dropout1(self.relu1(self.fc1(x)))
+        h2 = self.dropout2(self.relu2(self.fc2(h1)))
+        out = self.fc3(h2)
+        return out
+
+21/01/2026 08.45
+NeuralNetwork.py -> recreate the best so far (newparam3) with greater droput, result in marginal better performance
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_newparam9.csv"
+# neural network parameters
+input_size = 16
+h1_size = 32
+h2_size =16
+n_class = 7
+n_epoch = 75
+batch_size = 64
+learning_rate = 0.001
+dropout_1 = 0.2
+dropout_2 = 0.2
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+21/01/2026
+NeuralNetwork.py -> 0 dropout
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_newparam8.csv"
+# neural network parameters
+input_size = 16
+h1_size = 32
+h2_size =16
+n_class = 7
+n_epoch = 50
+batch_size = 32
+learning_rate = 0.001
+dropout_1 = 0.0
+dropout_2 = 0.0
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,dropout_1,dropout_2,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.dropout1(self.relu1(self.fc1(x)))
+        h2 = self.dropout2(self.relu2(self.fc2(h1)))
+        out = self.fc3(h2)
+        return out
+
+
+21/01/2026
+NeuralNetwork.py -> previous structure (2 hidden layers),smaller h1_size
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_newparam7.csv"
+# neural network parameters
+input_size = 16
+h1_size = 32
+h2_size =16
+n_class = 7
+n_epoch = 100
+batch_size = 32
+learning_rate = 0.001
+dropout_1 = 0.1
+dropout_2 = 0.1
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,dropout_1,dropout_2,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.dropout1(self.relu1(self.fc1(x)))
+        h2 = self.dropout2(self.relu2(self.fc2(h1)))
+        out = self.fc3(h2)
+        return out
+
+20/01/2026 22.49
+NeruralNetwork.py -> new network structure (ReLU,etc), hidden layer h3, smaller hidden layers size
+# INPUT
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_newparam6.csv"
+# neural network parameters
+input_size = 16
+h1_size = 32
+h2_size = 32
+h3_size = 16
+n_class = 7
+n_epoch = 50
+batch_size = 32
+learning_rate = 0.001
+dropout_1 = 0.2
+dropout_2 = 0.2
+dropout_3 = 0.2
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,h3_size,dropout_1,dropout_2,dropout_3,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,h3_size)
+        self.relu3 = nn.ReLU()
+        self.dropout3 = nn.Dropout(dropout_3)
+        self.fc4 = nn.Linear(h3_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.dropout1(self.relu1(self.fc1(x)))
+        h2 = self.dropout2(self.relu2(self.fc2(h1)))
+        h3 = self.dropout3(self.relu3(self.fc3(h2)))
+        out = self.fc4(h3)
+        return out
+
+20/01/2026 22.49
+NeruralNetwork.py -> new network structure (ReLU,etc),new hidden layer (h3)
+# INPUT
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_newparam5.csv"
+# neural network parameters
+input_size = 16
+h1_size = 64
+h2_size = 32
+h3_size = 16
+n_class = 7
+n_epoch = 100
+batch_size = 32
+learning_rate = 0.001
+dropout_1 = 0.1
+dropout_2 = 0.1
+dropout_3 = 0.1
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,h3_size,dropout_1,dropout_2,dropout_3,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,h3_size)
+        self.relu3 = nn.ReLU()
+        self.dropout3 = nn.Dropout(dropout_3)
+        self.fc4 = nn.Linear(h3_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.dropout1(self.relu1(self.fc1(x)))
+        h2 = self.dropout2(self.relu2(self.fc2(h1)))
+        h3 = self.dropout3(self.relu3(self.fc3(h2)))
+        out = self.fc4(h3)
+        return out
+
+20/01/2026 22.33
+NeruralNetwork.py -> sigmoid activation func, small netowrk as ref,small learning rate, increased batch_size
+# INPUT
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_semiparam2.csv"
+# neural network parameters
+input_size = 16
+h1_size = 12
+h2_size = 3
+n_class = 7
+n_epoch = 100
+batch_size = 128
+learning_rate = 0.001
+dropout_1 = 0.0
+dropout_2 = 0.0
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,dropout_1,dropout_2,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.Sigmoid()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.Sigmoid()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.dropout1(self.relu1(self.fc1(x)))
+        h2 = self.dropout2(self.relu2(self.fc2(h1)))
+        out = self.fc3(h2)
+        return out
+
+20/01/2026 22.23
+NeruralNetwork.py -> sigmoid activation func, small netowrk as ref,smaller learning rate
+# INPUT
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_semiparam1.csv"
+# neural network parameters
+input_size = 16
+h1_size = 12
+h2_size =3
+n_class = 7
+n_epoch = 100
+batch_size = 64
+learning_rate = 0.001
+dropout_1 = 0.0
+dropout_2 = 0.0
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,dropout_1,dropout_2,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.Sigmoid()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.Sigmoid()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.dropout1(self.relu1(self.fc1(x)))
+        h2 = self.dropout2(self.relu2(self.fc2(h1)))
+        out = self.fc3(h2)
+        return out
+
+20/01/2026 22.11
+NeruralNetwork.py -> new structure (ReLU,blarger hidden layers), smaller learning rate
+data = "final_project/data_preparation/dataset_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_file = "cv_NN_scaled_newparam3.csv"
+# neural network parameters
+input_size = 16
+h1_size = 32
+h2_size =16
+n_class = 7
+n_epoch = 100
+batch_size = 64
+learning_rate = 0.001
+dropout_1 = 0.07
+dropout_2 = 0.13
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 5 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,dropout_1,dropout_2,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.dropout1(self.relu1(self.fc1(x)))
+        h2 = self.dropout2(self.relu2(self.fc2(h1)))
+        out = self.fc3(h2)
+        return out
+
+19/01/2026 20.36
+NeuralNetwork.py
+# INPUT
+data_train = "final_project/data_preparation/dataset_train_scaled.csv"
+data_test = "final_project/data_preparation/dataset_test_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_train = "cv_NN_scaled_newparam1.csv"
+output_test = "test_NN_scaled_newparam1.json"
+# neural network parameters
+input_size = 16
+h1_size = 32
+h2_size =16
+n_class = 7
+n_epoch = 500
+batch_size = 32
+learning_rate = 0.01
+dropout_1 = 0.03
+dropout_2 = 0.06
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 10 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+# CLASS
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,dropout_1,dropout_2,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.relu1(self.fc1(x))
+        h2 = self.relu2(self.fc2(h1))
+        out = self.fc3(h2)
+        return out
+
+18/01/2026 23.27
+NeuralNetwork.py
+# INPUT
+data_train = "final_project/data_preparation/dataset_train_scaled.csv"
+data_test = "final_project/data_preparation/dataset_test_scaled.csv"
+class_col = "Class"
+output_dir = "final_project/results"
+output_train = "cv_NN_scaled_refparam.csv"
+output_test = "test_NN_scaled_refparam.json"
+# neural network parameters
+input_size = 16
+h1_size = 12
+h2_size = 3
+n_class = 7
+n_epoch = 500
+batch_size = 64
+learning_rate = 0.3
+dropout_1 = 0.0
+dropout_2 = 0.0
+# cross validation parameters
+seed = 92 # (!) KEEP CONSISTENT ACROSS VALIDATION RUNS (!) seed int for random_state
+n_splits = 10 # number of splits for StratifiedKFold n_splits
+scoring_metrics = ["accuracy","precision_macro","recall_macro","f1_macro"]
+class NN(nn.Module):
+    def __init__(self,input_size,h1_size,h2_size,dropout_1,dropout_2,n_class): # neurl network construction
+        super(NN,self).__init__()
+        self.fc1 = nn.Linear(input_size,h1_size)
+        self.relu1 = nn.Sigmoid()
+        self.dropout1 = nn.Dropout(dropout_1)
+        self.fc2 = nn.Linear(h1_size,h2_size)
+        self.relu2 = nn.Sigmoid()
+        self.dropout2 = nn.Dropout(dropout_2)
+        self.fc3 = nn.Linear(h2_size,n_class)
+    def forward(self,x): # forward pass
+        h1 = self.relu1(self.fc1(x))
+        h2 = self.relu2(self.fc2(h1))
+        out = self.fc3(h2)
+        return out
+
